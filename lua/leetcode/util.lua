@@ -42,6 +42,26 @@ local lang_order = {
   "typescript",
 }
 
+local ext_order = {
+  { lang = "bash", ext = ".sh" },
+  { lang = "c", ext = ".c" },
+  { lang = "cpp", ext = ".cpp" },
+  { lang = "csharp", ext = ".cs" },
+  { lang = "golang", ext = ".go" },
+  { lang = "java", ext = ".java" },
+  { lang = "javascript", ext = ".js" },
+  { lang = "kotlin", ext = ".kt" },
+  { lang = "mysql", ext = ".sql" },
+  { lang = "php", ext = ".php" },
+  { lang = "python", ext = ".py" },
+  { lang = "python3", ext = ".py" },
+  { lang = "ruby", ext = ".rb" },
+  { lang = "rust", ext = ".rs" },
+  { lang = "scala", ext = ".scala" },
+  { lang = "swift", ext = ".swift" },
+  { lang = "typescript", ext = ".ts" },
+}
+
 function M.trim(s)
   return (s or ""):gsub("^%s+", ""):gsub("%s+$", "")
 end
@@ -116,9 +136,9 @@ function M.is_supported_lang(lang)
 end
 
 function M.ext_to_lang(path)
-  for lang, ext in pairs(exts) do
-    if path:sub(-#ext) == ext then
-      return lang
+  for _, item in ipairs(ext_order) do
+    if path:sub(-#item.ext) == item.ext then
+      return item.lang
     end
   end
   return "unknown"
