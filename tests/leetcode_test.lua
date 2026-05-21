@@ -33,6 +33,7 @@ function M.run()
   local files = require("leetcode.files")
   local cli = require("leetcode.cli")
   local output = require("leetcode.output")
+  local session = require("leetcode.session")
 
   assert_eq(util.template_filename("${id}.${kebab-case-name}.${ext}", {
     id = 1,
@@ -86,6 +87,13 @@ func twoSum(nums []int, target int) []int {
 
   local workspace = tmpdir()
   config.setup({ workspace = workspace })
+  local user_path = session.save_cookie_user(" user@example.com ", util.cookie_from_values("session", "csrf"), workspace)
+  assert_eq(user_path, workspace .. "/.lc/leetcode/user.json", "session file path")
+  local user = vim.json.decode(table.concat(vim.fn.readfile(user_path), "\n"))
+  assert_eq(user.login, "user@example.com", "session login")
+  assert_eq(user.sessionId, "session", "session id")
+  assert_eq(user.sessionCSRF, "csrf", "session csrf")
+
   local path, created = files.write_or_open(problem, content)
   assert_true(created, "file should be created")
   assert_eq(vim.fn.fnamemodify(path, ":t"), "1.two-sum.go", "created file name")

@@ -81,11 +81,8 @@ Use `:LeetCodeLogin`, choose cookie login, then enter:
 - either a full copied cookie string, or the raw `LEETCODE_SESSION` value
 - the raw `csrftoken` value, only if you did not paste a full cookie string
 
-The plugin builds the cookie string for you and sends it to:
-
-```sh
-leetcode user -c
-```
+The plugin builds the cookie string for you and saves it where
+`vsc-leetcode-cli` reads its session: `~/.lc/leetcode/user.json`.
 
 Internally, the plugin formats those values as:
 

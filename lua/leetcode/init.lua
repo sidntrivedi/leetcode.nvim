@@ -3,6 +3,7 @@ local config = require("leetcode.config")
 local files = require("leetcode.files")
 local output = require("leetcode.output")
 local parser = require("leetcode.parser")
+local session = require("leetcode.session")
 local util = require("leetcode.util")
 
 local M = {}
@@ -82,9 +83,17 @@ function M.login()
           return
         end
 
-        cli.run(choice.args, { stdin = util.cookie_login_stdin(login, cookie) }, function(result)
-          show_result("login", result)
-        end)
+        local path, err = session.save_cookie_user(login, cookie)
+        if err then
+          util.notify(err, vim.log.levels.ERROR)
+          return
+        end
+
+        show_result("login", {
+          code = 0,
+          stdout = "Saved LeetCode cookie session to " .. path .. "\nRun :LeetCodeSearch or :LeetCodeOpen to verify it against leetcode.com.",
+          stderr = "",
+        })
       end)
       return
     end
