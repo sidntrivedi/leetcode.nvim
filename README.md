@@ -11,20 +11,36 @@ files with descriptions, running tests, and submitting the current file.
 - Network access to `leetcode.com` for login, problem fetch, test, and submit.
 - A LeetCode browser session if you use the recommended cookie login flow. The
   cookie string must include `LEETCODE_SESSION` and `csrftoken`.
-- The `vsc-leetcode-cli` dependency installed locally for this plugin.
+- The `vsc-leetcode-cli` dependency installed locally for this plugin with
+  `npm install`.
 
-Install the CLI dependency from this plugin directory:
+## Installation
+
+This config uses Neovim's native package layout. Clone the plugin into
+`pack/plugins/start`, then install the local Node dependency:
 
 ```sh
+mkdir -p ~/.local/share/nvim/site/pack/plugins/start
+git clone git@github.com:sidntrivedi/leetcode.nvim \
+  ~/.local/share/nvim/site/pack/plugins/start/leetcode.nvim
+cd ~/.local/share/nvim/site/pack/plugins/start/leetcode.nvim
 npm install
 ```
 
 ## Setup
 
+Create `~/.config/nvim/lua/plugins/leetcode.lua`:
+
 ```lua
 require("leetcode").setup({
   workspace = vim.fn.expand("~/Code/leetcode"),
 })
+```
+
+Then load it from `~/.config/nvim/init.lua` with your other plugin configs:
+
+```lua
+safe_require("plugins.leetcode")
 ```
 
 Defaults:
