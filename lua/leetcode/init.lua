@@ -55,13 +55,28 @@ function M.login()
     end
 
     if choice.stdin then
-      local cookie = vim.fn.inputsecret("LeetCode cookie: ")
-      if cookie == "" then
-        util.notify("Login cancelled", vim.log.levels.WARN)
-        return
-      end
-      cli.run(choice.args, { stdin = cookie .. "\n" }, function(result)
-        show_result("login", result)
+      vim.ui.input({ prompt = "LeetCode username or email: " }, function(login)
+        if not login or util.trim(login) == "" then
+          util.notify("Login cancelled", vim.log.levels.WARN)
+          return
+        end
+
+        local session = vim.fn.inputsecret("LEETCODE_SESSION value: ")
+        if session == "" then
+          util.notify("Login cancelled", vim.log.levels.WARN)
+          return
+        end
+
+        local csrf = vim.fn.inputsecret("csrftoken value: ")
+        if csrf == "" then
+          util.notify("Login cancelled", vim.log.levels.WARN)
+          return
+        end
+
+        local cookie = util.cookie_from_values(session, csrf)
+        cli.run(choice.args, { stdin = util.cookie_login_stdin(login, cookie) }, function(result)
+          show_result("login", result)
+        end)
       end)
       return
     end

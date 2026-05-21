@@ -75,11 +75,22 @@ require("leetcode").setup({
 
 ## Cookie Login
 
-Use `:LeetCodeLogin`, choose cookie login, and paste a cookie string containing
-`LEETCODE_SESSION` and `csrftoken`. The plugin sends it to:
+Use `:LeetCodeLogin`, choose cookie login, then enter:
+
+- your LeetCode username or email
+- the raw `LEETCODE_SESSION` value from the browser cookie
+- the raw `csrftoken` value from the browser cookie
+
+The plugin builds the cookie string for you and sends it to:
 
 ```sh
 leetcode user -c
+```
+
+Internally, the plugin formats those values as:
+
+```text
+LEETCODE_SESSION=<session-value>; csrftoken=<csrf-value>;
 ```
 
 The cookie is redacted from output buffers.

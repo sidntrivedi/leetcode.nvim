@@ -50,6 +50,19 @@ function M.redact(s)
   return s
 end
 
+function M.cookie_has_required_fields(cookie)
+  cookie = cookie or ""
+  return cookie:match("LEETCODE_SESSION=([^;]+)") ~= nil and cookie:match("csrftoken=([^;]+)") ~= nil
+end
+
+function M.cookie_from_values(session, csrf)
+  return "LEETCODE_SESSION=" .. M.trim(session) .. "; csrftoken=" .. M.trim(csrf) .. ";"
+end
+
+function M.cookie_login_stdin(login, cookie)
+  return M.trim(login) .. "\n" .. M.trim(cookie) .. "\n"
+end
+
 function M.notify(msg, level)
   vim.notify(msg, level or vim.log.levels.INFO, { title = "leetcode.nvim" })
 end
@@ -124,4 +137,3 @@ function M.first_non_empty_line(content)
 end
 
 return M
-

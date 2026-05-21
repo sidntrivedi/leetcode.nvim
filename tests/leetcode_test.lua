@@ -38,6 +38,13 @@ function M.run()
     name = "Two Sum",
     ext = ".go",
   }), "1.two-sum.go", "filename template")
+  assert_true(util.cookie_has_required_fields("LEETCODE_SESSION=session; csrftoken=csrf;"), "cookie validation")
+  assert_eq(util.cookie_from_values(" session ", " csrf "), "LEETCODE_SESSION=session; csrftoken=csrf;", "cookie builder")
+  assert_eq(
+    util.cookie_login_stdin(" user@example.com ", util.cookie_from_values("session", "csrf")),
+    "user@example.com\nLEETCODE_SESSION=session; csrftoken=csrf;\n",
+    "cookie login stdin"
+  )
 
   local parsed = parser.parse_list([[
     ✔   [   1] Two Sum                                                      Easy   (57.43 %)
@@ -98,4 +105,3 @@ func twoSum(nums []int, target int) []int {
 end
 
 return M
-
