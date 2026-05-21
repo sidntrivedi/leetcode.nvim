@@ -78,8 +78,8 @@ require("leetcode").setup({
 Use `:LeetCodeLogin`, choose cookie login, then enter:
 
 - your LeetCode username or email
-- the raw `LEETCODE_SESSION` value from the browser cookie
-- the raw `csrftoken` value from the browser cookie
+- either a full copied cookie string, or the raw `LEETCODE_SESSION` value
+- the raw `csrftoken` value, only if you did not paste a full cookie string
 
 The plugin builds the cookie string for you and sends it to:
 

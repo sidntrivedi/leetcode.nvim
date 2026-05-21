@@ -39,7 +39,18 @@ function M.run()
     ext = ".go",
   }), "1.two-sum.go", "filename template")
   assert_true(util.cookie_has_required_fields("LEETCODE_SESSION=session; csrftoken=csrf;"), "cookie validation")
+  assert_eq(util.cookie_value("LEETCODE_SESSION=session; csrftoken=csrf;", "LEETCODE_SESSION"), "session", "cookie value")
   assert_eq(util.cookie_from_values(" session ", " csrf "), "LEETCODE_SESSION=session; csrftoken=csrf;", "cookie builder")
+  assert_eq(
+    util.cookie_from_login_input("LEETCODE_SESSION=session; csrftoken=csrf;"),
+    "LEETCODE_SESSION=session; csrftoken=csrf;",
+    "full cookie input"
+  )
+  assert_eq(
+    util.cookie_from_login_input("LEETCODE_SESSION=session;", "csrf"),
+    "LEETCODE_SESSION=session; csrftoken=csrf;",
+    "partial cookie input"
+  )
   assert_eq(
     util.cookie_login_stdin(" user@example.com ", util.cookie_from_values("session", "csrf")),
     "user@example.com\nLEETCODE_SESSION=session; csrftoken=csrf;\n",

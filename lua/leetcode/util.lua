@@ -55,8 +55,23 @@ function M.cookie_has_required_fields(cookie)
   return cookie:match("LEETCODE_SESSION=([^;]+)") ~= nil and cookie:match("csrftoken=([^;]+)") ~= nil
 end
 
+function M.cookie_value(cookie, name)
+  cookie = cookie or ""
+  return cookie:match(name .. "=([^;]+)")
+end
+
 function M.cookie_from_values(session, csrf)
   return "LEETCODE_SESSION=" .. M.trim(session) .. "; csrftoken=" .. M.trim(csrf) .. ";"
+end
+
+function M.cookie_from_login_input(session_or_cookie, csrf)
+  session_or_cookie = M.trim(session_or_cookie)
+  if M.cookie_has_required_fields(session_or_cookie) then
+    return session_or_cookie
+  end
+
+  local session = M.cookie_value(session_or_cookie, "LEETCODE_SESSION") or session_or_cookie
+  return M.cookie_from_values(session, csrf or "")
 end
 
 function M.cookie_login_stdin(login, cookie)

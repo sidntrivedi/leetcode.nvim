@@ -61,19 +61,27 @@ function M.login()
           return
         end
 
-        local session = vim.fn.inputsecret("LEETCODE_SESSION value: ")
-        if session == "" then
+        local session_or_cookie = vim.fn.inputsecret("Paste full cookie or LEETCODE_SESSION value: ")
+        if session_or_cookie == "" then
           util.notify("Login cancelled", vim.log.levels.WARN)
           return
         end
 
-        local csrf = vim.fn.inputsecret("csrftoken value: ")
-        if csrf == "" then
-          util.notify("Login cancelled", vim.log.levels.WARN)
+        local csrf = ""
+        if not util.cookie_has_required_fields(session_or_cookie) then
+          csrf = vim.fn.inputsecret("csrftoken value: ")
+          if csrf == "" then
+            util.notify("Login cancelled", vim.log.levels.WARN)
+            return
+          end
+        end
+
+        local cookie = util.cookie_from_login_input(session_or_cookie, csrf)
+        if not util.cookie_has_required_fields(cookie) then
+          util.notify("Cookie login needs LEETCODE_SESSION and csrftoken values", vim.log.levels.ERROR)
           return
         end
 
-        local cookie = util.cookie_from_values(session, csrf)
         cli.run(choice.args, { stdin = util.cookie_login_stdin(login, cookie) }, function(result)
           show_result("login", result)
         end)
