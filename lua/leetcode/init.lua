@@ -1,8 +1,12 @@
 local cli = require("leetcode.cli")
 local config = require("leetcode.config")
+local diagnostics = require("leetcode.diagnostics")
 local files = require("leetcode.files")
+local languages = require("leetcode.languages")
 local output = require("leetcode.output")
 local parser = require("leetcode.parser")
+local picker = require("leetcode.picker")
+local results = require("leetcode.results")
 local session = require("leetcode.session")
 local util = require("leetcode.util")
 
@@ -23,6 +27,16 @@ local function show_result(title, result, opts)
   output.show(title, body, opts)
 end
 
+local function show_parsed_result(title, result, opts)
+  local raw = table.concat(vim.tbl_filter(function(part)
+    return part and part ~= ""
+  end, { result.stdout, result.stderr }), "\n")
+  if raw == "" then
+    raw = "Command finished with exit code " .. tostring(result.code)
+  end
+  output.show(title, results.format(title, raw, result.code), opts)
+end
+
 local function current_file()
   local path = vim.api.nvim_buf_get_name(0)
   if path == "" then
@@ -36,6 +50,30 @@ local function save_current_file()
   if vim.bo.modified then
     vim.cmd.write()
   end
+end
+
+local function current_problem_meta(path)
+  local ok, meta = pcall(parser.meta_from_file, path)
+  if not ok or not meta or not meta.valid then
+    local detail = ok and meta and meta.warning or tostring(meta)
+    show_result("metadata", {
+      code = 1,
+      stdout = "",
+      stderr = table.concat({
+        "Current file is not a LeetCode solution file.",
+        detail or "Unable to read problem metadata.",
+        "",
+        "Open a problem with :LeetCodeOpen or :LeetCodeSearch, or add a header like:",
+        "@lc app=leetcode id=1 lang=golang",
+      }, "\n"),
+    })
+    return nil
+  end
+
+  if meta.source == "filename" and meta.warning then
+    util.notify(meta.warning, vim.log.levels.WARN)
+  end
+  return meta
 end
 
 function M.login()
@@ -116,6 +154,24 @@ function M.user()
   end)
 end
 
+function M.login_status()
+  diagnostics.login_status(function(text)
+    output.show("login-status", text)
+  end)
+end
+
+function M.lang(lang)
+  if lang and lang ~= "" then
+    local ok, err = languages.set(lang)
+    if not ok then
+      util.notify(err, vim.log.levels.ERROR)
+    end
+    return
+  end
+
+  languages.select()
+end
+
 function M.open_problem(keyword, known)
   if not keyword or keyword == "" then
     util.notify("Missing LeetCode problem id, slug, or title", vim.log.levels.ERROR)
@@ -165,12 +221,7 @@ function M.search(query)
       return
     end
 
-    vim.ui.select(problems, {
-      prompt = "LeetCode problems",
-      format_item = function(item)
-        return string.format("[%s] %s %s", item.fid or item.id, item.name, item.level or "")
-      end,
-    }, function(choice)
+    picker.select_problem(problems, function(choice)
       if not choice then
         return
       end
@@ -184,6 +235,9 @@ function M.test(testcase)
   if not path then
     return
   end
+  if not current_problem_meta(path) then
+    return
+  end
   save_current_file()
 
   local args = { "test", path }
@@ -192,7 +246,7 @@ function M.test(testcase)
   end
   local win = vim.api.nvim_get_current_win()
   cli.run(args, {}, function(result)
-    show_result("test", result, { return_to = command_failed(result) and nil or win })
+    show_parsed_result("test", result, { return_to = command_failed(result) and nil or win })
   end)
 end
 
@@ -201,11 +255,14 @@ function M.submit()
   if not path then
     return
   end
+  if not current_problem_meta(path) then
+    return
+  end
   save_current_file()
 
   local win = vim.api.nvim_get_current_win()
   cli.run({ "submit", path }, {}, function(result)
-    show_result("submit", result, { return_to = command_failed(result) and nil or win })
+    show_parsed_result("submit", result, { return_to = command_failed(result) and nil or win })
   end)
 end
 
@@ -220,8 +277,12 @@ local function register_commands()
   commands_registered = true
 
   vim.api.nvim_create_user_command("LeetCodeLogin", M.login, {})
+  vim.api.nvim_create_user_command("LeetCodeLoginStatus", M.login_status, {})
   vim.api.nvim_create_user_command("LeetCodeLogout", M.logout, {})
   vim.api.nvim_create_user_command("LeetCodeUser", M.user, {})
+  vim.api.nvim_create_user_command("LeetCodeLang", function(opts)
+    M.lang(opts.args)
+  end, { nargs = "?" })
   vim.api.nvim_create_user_command("LeetCodeSearch", function(opts)
     M.search(opts.args)
   end, { nargs = "*" })

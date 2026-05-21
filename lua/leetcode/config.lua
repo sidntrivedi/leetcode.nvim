@@ -31,5 +31,8 @@ function M.get()
   return M.options
 end
 
-return M
+function M.set_lang(lang)
+  M.options.lang = lang
+end
 
+return M

@@ -26,6 +26,14 @@ function M.parse_list(output)
   local problems = {}
   for _, raw in ipairs(util.split_lines(output)) do
     local line = util.strip_ansi(raw)
+    local locked = line:find("🔒", 1, true) ~= nil
+    local starred = line:find("★", 1, true) ~= nil
+    local state = "None"
+    if line:find("✔", 1, true) then
+      state = "ac"
+    elseif line:find("✘", 1, true) then
+      state = "notac"
+    end
     line = line:gsub("[✔✘★☆🔒]", " ")
     local id, rest = line:match("%[%s*([%w%-]+)%s*%]%s+(.+)")
     local name, level, percent
@@ -46,6 +54,9 @@ function M.parse_list(output)
         slug = util.slugify(name),
         level = level,
         percent = tonumber(percent),
+        locked = locked,
+        starred = starred,
+        state = state,
       })
     end
   end
@@ -56,12 +67,23 @@ function M.meta_from_file(path, content)
   content = content or table.concat(vim.fn.readfile(path), "\n")
   local id, lang = content:match("@lc%s+app=leetcode%s+id=([^%s]+)%s+lang=([^%s]+)")
   if id and lang then
-    return { id = id, fid = id, lang = lang }
+    return { id = id, fid = id, lang = lang, source = "metadata", valid = true }
   end
+
   local name = vim.fn.fnamemodify(path, ":t:r")
   id = name:match("^([^.]+)")
   lang = util.ext_to_lang(path)
-  return { id = id, fid = id, lang = lang }
+  local valid = id ~= nil and id ~= "" and lang ~= "unknown"
+  return {
+    id = id,
+    fid = id,
+    lang = lang,
+    source = "filename",
+    valid = valid,
+    warning = valid
+        and "Missing @lc metadata, using filename and extension fallback"
+      or "Current file is missing @lc metadata and does not look like a LeetCode solution file",
+  }
 end
 
 return M

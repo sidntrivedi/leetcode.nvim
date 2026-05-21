@@ -9,6 +9,15 @@ local function local_cli_path()
   return util.path_join(root, "node_modules", "vsc-leetcode-cli", "bin", "leetcode")
 end
 
+function M.local_path()
+  return local_cli_path()
+end
+
+function M.exists(path)
+  path = path or M.resolve()
+  return vim.fn.filereadable(path) == 1 or vim.fn.executable(path) == 1
+end
+
 function M.resolve()
   local opts = config.get()
   if opts.cli.path and opts.cli.path ~= "" then

@@ -19,6 +19,27 @@ local exts = {
   rust = ".rs",
   scala = ".scala",
   swift = ".swift",
+  typescript = ".ts",
+}
+
+local lang_order = {
+  "bash",
+  "c",
+  "cpp",
+  "csharp",
+  "golang",
+  "java",
+  "javascript",
+  "kotlin",
+  "mysql",
+  "php",
+  "python",
+  "python3",
+  "ruby",
+  "rust",
+  "scala",
+  "swift",
+  "typescript",
 }
 
 function M.trim(s)
@@ -84,6 +105,14 @@ end
 
 function M.lang_to_ext(lang)
   return exts[lang] or ".raw"
+end
+
+function M.supported_langs()
+  return vim.deepcopy(lang_order)
+end
+
+function M.is_supported_lang(lang)
+  return exts[lang] ~= nil
 end
 
 function M.ext_to_lang(path)

@@ -20,6 +20,9 @@ LeetCode transport layer.
 - [`vsc-leetcode-cli`](https://www.npmjs.com/package/vsc-leetcode-cli)
   available either from this plugin's local `node_modules`, from a `leetcode`
   executable on `PATH`, or from `cli.path` in setup.
+- Optional: [`telescope.nvim`](https://github.com/nvim-telescope/telescope.nvim)
+  for the `:LeetCodeSearch` picker. The plugin falls back to `vim.ui.select`
+  when Telescope is not installed.
 
 ## Installation
 
@@ -107,13 +110,24 @@ require("leetcode").setup({
 ## Commands
 
 - `:LeetCodeLogin` logs in. Cookie login is the default and recommended flow.
+- `:LeetCodeLoginStatus` checks the saved session file and performs a light
+  authenticated LeetCode request when `curl` is available.
 - `:LeetCodeLogout` logs out.
 - `:LeetCodeUser` shows the current user.
+- `:LeetCodeLang [lang]` changes the language used by future problem opens.
+  Without an argument it opens a picker.
 - `:LeetCodeSearch [query]` searches problems and opens the selected problem.
+  Telescope is used automatically when available.
 - `:LeetCodeOpen <id|slug|title>` opens one problem directly.
 - `:LeetCodeTest [testcase]` runs tests for the current file.
 - `:LeetCodeSubmit` submits the current file.
-- `:LeetCodeHealth` checks Node, CLI path, and basic configuration.
+- `:LeetCodeHealth` checks workspace, language, CLI path, Node, filename
+  template, and saved cookie fields with suggested fixes.
+
+`LeetCodeTest` and `LeetCodeSubmit` expect a file opened by this plugin, or a
+file containing an `@lc app=leetcode id=<id> lang=<lang>` header. If that
+metadata is missing, the plugin will explain what needs to be added instead of
+letting the CLI fail with a vague error.
 
 ## Cookie Login
 
@@ -133,3 +147,6 @@ LEETCODE_SESSION=<session-value>; csrftoken=<csrf-value>;
 ```
 
 The cookie is redacted from output buffers.
+
+Run `:LeetCodeLoginStatus` after login if you want to validate the saved cookie
+before searching or opening problems.
