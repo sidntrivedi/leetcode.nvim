@@ -4,6 +4,12 @@ A small Neovim wrapper around the same LeetCode CLI used by the VS Code
 extension. It supports login/logout, searching problems, generating solution
 files with descriptions, running tests, and submitting the current file.
 
+This plugin is inspired by
+[LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)
+and uses
+[vsc-leetcode-cli](https://www.npmjs.com/package/vsc-leetcode-cli) for the
+LeetCode transport layer.
+
 ## Prerequisites
 
 - Neovim 0.10 or newer.
@@ -11,19 +17,38 @@ files with descriptions, running tests, and submitting the current file.
 - Network access to `leetcode.com` for login, problem fetch, test, and submit.
 - A LeetCode browser session if you use the recommended cookie login flow. The
   cookie string must include `LEETCODE_SESSION` and `csrftoken`.
-- The `vsc-leetcode-cli` dependency installed locally for this plugin with
-  `npm install`.
+- The local Node dependency installed from this plugin directory with
+  `npm install`. This installs
+  [`vsc-leetcode-cli`](https://www.npmjs.com/package/vsc-leetcode-cli), the CLI
+  used by the VS Code extension.
 
 ## Installation
 
-This config uses Neovim's native package layout. Clone the plugin into
-`pack/plugins/start`, then install the local Node dependency:
+### Native Packages
+
+Use this section if you install plugins with Neovim's built-in package layout
+(`:h packages`), sometimes called vim packages or vim-pack. Clone the plugin
+into `pack/plugins/start`, then install the local Node dependency:
 
 ```sh
 mkdir -p ~/.local/share/nvim/site/pack/plugins/start
 git clone git@github.com:sidntrivedi/leetcode.nvim \
   ~/.local/share/nvim/site/pack/plugins/start/leetcode.nvim
 cd ~/.local/share/nvim/site/pack/plugins/start/leetcode.nvim
+npm install
+```
+
+### Other Plugin Managers
+
+If you use a plugin manager such as `lazy.nvim`, `packer.nvim`, or `vim-plug`,
+install `sidntrivedi/leetcode.nvim` using that manager's normal GitHub plugin
+syntax. After the plugin is cloned, run `npm install` inside the cloned plugin
+directory so `vsc-leetcode-cli` is available.
+
+Example dependency install:
+
+```sh
+cd /path/to/leetcode.nvim
 npm install
 ```
 
