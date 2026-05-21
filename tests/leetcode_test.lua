@@ -32,6 +32,7 @@ function M.run()
   local config = require("leetcode.config")
   local files = require("leetcode.files")
   local cli = require("leetcode.cli")
+  local output = require("leetcode.output")
 
   assert_eq(util.template_filename("${id}.${kebab-case-name}.${ext}", {
     id = 1,
@@ -110,6 +111,14 @@ func twoSum(nums []int, target int) []int {
   assert_eq(result.stdout, "ok\n", "mock cli stdout")
   assert_eq(cmd[1], mock_cli, "cli path")
   assert_eq(table.concat(vim.fn.readfile(workspace .. "/argv.txt"), " "), "test " .. path, "cli argv")
+
+  output.show("login", "first")
+  local first_buf = output._find_buffer("leetcode://login")
+  assert_true(first_buf ~= nil, "output buffer created")
+  output.show("login", "second")
+  local second_buf = output._find_buffer("leetcode://login")
+  assert_eq(second_buf, first_buf, "output buffer reused")
+  assert_eq(table.concat(vim.api.nvim_buf_get_lines(second_buf, 0, -1, false), "\n"), "second", "output buffer updated")
 
   print("leetcode.nvim tests passed")
   vim.cmd("qa!")
