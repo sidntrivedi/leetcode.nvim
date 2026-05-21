@@ -1,0 +1,69 @@
+# leetcode.nvim
+
+A small Neovim wrapper around the same LeetCode CLI used by the VS Code
+extension. It supports login/logout, searching problems, generating solution
+files with descriptions, running tests, and submitting the current file.
+
+## Prerequisites
+
+- Neovim 0.10 or newer.
+- Node.js and npm available on your `PATH`.
+- Network access to `leetcode.com` for login, problem fetch, test, and submit.
+- A LeetCode browser session if you use the recommended cookie login flow. The
+  cookie string must include `LEETCODE_SESSION` and `csrftoken`.
+- The `vsc-leetcode-cli` dependency installed locally for this plugin.
+
+Install the CLI dependency from this plugin directory:
+
+```sh
+npm install
+```
+
+## Setup
+
+```lua
+require("leetcode").setup({
+  workspace = vim.fn.expand("~/Code/leetcode"),
+})
+```
+
+Defaults:
+
+```lua
+require("leetcode").setup({
+  workspace = vim.fn.getcwd(),
+  lang = "golang",
+  file = {
+    folder = "",
+    filename = "${id}.${kebab-case-name}.${ext}",
+    overwrite = false,
+    ensure_go_package = true,
+  },
+  cli = {
+    node = "node",
+    path = nil,
+  },
+})
+```
+
+## Commands
+
+- `:LeetCodeLogin` logs in. Cookie login is the default and recommended flow.
+- `:LeetCodeLogout` logs out.
+- `:LeetCodeUser` shows the current user.
+- `:LeetCodeSearch [query]` searches problems and opens the selected problem.
+- `:LeetCodeOpen <id|slug|title>` opens one problem directly.
+- `:LeetCodeTest [testcase]` runs tests for the current file.
+- `:LeetCodeSubmit` submits the current file.
+- `:LeetCodeHealth` checks Node, CLI path, and basic configuration.
+
+## Cookie Login
+
+Use `:LeetCodeLogin`, choose cookie login, and paste a cookie string containing
+`LEETCODE_SESSION` and `csrftoken`. The plugin sends it to:
+
+```sh
+leetcode user -c
+```
+
+The cookie is redacted from output buffers.

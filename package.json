@@ -1,0 +1,12 @@
+{
+  "name": "leetcode.nvim",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neovim wrapper for vsc-leetcode-cli",
+  "scripts": {
+    "test": "TMPDIR=/private/tmp NVIM_LOG_FILE=/private/tmp/leetcode.nvim-test.log nvim --headless --noplugin -u tests/minimal_init.lua -c \"lua require('run_tests')\""
+  },
+  "dependencies": {
+    "vsc-leetcode-cli": "2.8.1"
+  }
+}
