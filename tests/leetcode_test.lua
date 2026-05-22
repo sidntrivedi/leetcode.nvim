@@ -35,6 +35,7 @@ function M.run()
   local output = require("leetcode.output")
   local session = require("leetcode.session")
   local results = require("leetcode.results")
+  local result_panel = require("leetcode.result_panel")
   local languages = require("leetcode.languages")
   local diagnostics = require("leetcode.diagnostics")
 
@@ -156,6 +157,10 @@ func twoSum(nums []int, target int) []int {
   assert_true(formatted_result:match("Submit result"), "formatted title")
   assert_true(formatted_result:match("Status: Accepted"), "formatted status")
   assert_true(formatted_result:match("Runtime: 1 ms"), "formatted runtime")
+  local panel_lines = result_panel._summary_lines(parsed_result)
+  assert_eq(panel_lines[1], "WRONG  LeetCode Test", "panel title")
+  assert_true(table.concat(panel_lines, "\n"):match("Your Output"), "panel output section")
+  assert_true(table.concat(panel_lines, "\n"):match("Expected"), "panel expected section")
 
   local health = diagnostics.format(diagnostics.collect())
   assert_true(health:match("leetcode.nvim health"), "health title")

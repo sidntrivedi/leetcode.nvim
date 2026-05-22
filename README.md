@@ -123,8 +123,9 @@ require("leetcode").setup({
   Telescope is used automatically when available.
 - `:LeetCodeOpen [id|slug|title]` opens one problem directly. Without an
   argument it prompts in a floating text box.
-- `:LeetCodeTest [testcase]` runs tests for the current file.
-- `:LeetCodeSubmit` submits the current file.
+- `:LeetCodeTest [testcase]` runs tests for the current file and shows a
+  floating result panel.
+- `:LeetCodeSubmit` submits the current file and shows a floating result panel.
 - `:LeetCodeHealth` checks workspace, language, CLI path, Node, filename
   template, and saved cookie fields with suggested fixes.
 
@@ -144,6 +145,17 @@ search queries, direct open prompts, login username/email, cookie input, and
 Selection prompts, such as login method, language, and search results, use
 Telescope automatically when it is available. Without Telescope they fall back
 to your configured `vim.ui.select` implementation.
+
+## Result Panel
+
+`LeetCodeTest` and `LeetCodeSubmit` show a compact floating result panel with
+the parsed status, runtime, memory, testcase input, actual output, expected
+output, stdout, and errors when the CLI provides those fields.
+
+Inside the panel:
+
+- `r` opens the full raw CLI output in the normal output buffer.
+- `q` or `<Esc>` closes the panel.
 
 ## Cookie Login
 

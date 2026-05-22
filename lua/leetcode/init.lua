@@ -7,6 +7,7 @@ local languages = require("leetcode.languages")
 local output = require("leetcode.output")
 local parser = require("leetcode.parser")
 local picker = require("leetcode.picker")
+local result_panel = require("leetcode.result_panel")
 local results = require("leetcode.results")
 local session = require("leetcode.session")
 local util = require("leetcode.util")
@@ -35,7 +36,7 @@ local function show_parsed_result(title, result, opts)
   if raw == "" then
     raw = "Command finished with exit code " .. tostring(result.code)
   end
-  output.show(title, results.format(title, raw, result.code), opts)
+  result_panel.show(title, raw, result.code, opts)
 end
 
 local function buffer_file(buf)
