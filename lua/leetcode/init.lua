@@ -11,6 +11,7 @@ local result_panel = require("leetcode.result_panel")
 local results = require("leetcode.results")
 local session = require("leetcode.session")
 local testcase = require("leetcode.testcase")
+local topics = require("leetcode.topics")
 local util = require("leetcode.util")
 
 local M = {}
@@ -38,6 +39,26 @@ local function show_parsed_result(title, result, opts)
     raw = "Command finished with exit code " .. tostring(result.code)
   end
   result_panel.show(title, raw, result.code, opts)
+end
+
+local function write_problem_from_show_result(title, result, known)
+  if command_failed(result) then
+    show_result(title, result)
+    return
+  end
+
+  local content = util.strip_ansi(result.stdout)
+  local problem = parser.problem_from_content(content)
+  if known then
+    problem = vim.tbl_extend("force", known, problem)
+  end
+  if not problem.id or problem.id == "" then
+    show_result(title, { stdout = content, stderr = "Unable to parse problem metadata from CLI output", code = 1 })
+    return
+  end
+
+  local path, created = files.write_or_open(problem, content)
+  util.notify((created and "Created " or "Opened ") .. path)
 end
 
 local function buffer_file(buf)
@@ -253,23 +274,31 @@ function M.open_problem(keyword, known)
 
   local args = { "show", keyword, "-c", "-x", "-l", config.get().lang }
   cli.run(args, {}, function(result)
-    if command_failed(result) then
-      show_result("open", result)
-      return
-    end
+    write_problem_from_show_result("open", result, known)
+  end)
+end
 
-    local content = util.strip_ansi(result.stdout)
-    local problem = parser.problem_from_content(content)
-    if known then
-      problem = vim.tbl_extend("force", known, problem)
-    end
-    if not problem.id or problem.id == "" then
-      show_result("open", { stdout = content, stderr = "Unable to parse problem metadata from CLI output", code = 1 })
-      return
-    end
+function M.random_topic(topic)
+  topic = topics.normalize(topic)
+  if topic == "" then
+    picker.select_items(topics.list(), {
+      prompt = "LeetCode random topic",
+      format_item = function(item)
+        return string.format("%-24s %s", item.label, item.value)
+      end,
+    }, function(choice)
+      if choice then
+        M.random_topic(choice.value)
+      end
+    end)
+    return
+  end
 
-    local path, created = files.write_or_open(problem, content)
-    util.notify((created and "Created " or "Opened ") .. path)
+  local args = { "show", "-t", topic, "-c", "-x", "-l", config.get().lang }
+  cli.run(args, {}, function(result)
+    write_problem_from_show_result("random-topic", result, {
+      topic = topic,
+    })
   end)
 end
 
@@ -385,6 +414,9 @@ local function register_commands()
   end, { nargs = "*" })
   vim.api.nvim_create_user_command("LeetCodeOpen", function(opts)
     M.open_problem(opts.args)
+  end, { nargs = "*" })
+  vim.api.nvim_create_user_command("LeetCodeRandomTopic", function(opts)
+    M.random_topic(opts.args)
   end, { nargs = "*" })
   vim.api.nvim_create_user_command("LeetCodeTest", function(opts)
     M.test(opts.args)

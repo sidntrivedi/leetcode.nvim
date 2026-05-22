@@ -260,6 +260,14 @@ Open directly by id, slug, or title:
 :LeetCodeOpen two-sum
 ```
 
+Open a random problem from a topic. Without an argument it opens a searchable
+topic picker:
+
+```vim
+:LeetCodeRandomTopic
+:LeetCodeRandomTopic dynamic-programming
+```
+
 Change language for future opens:
 
 ```vim
@@ -343,6 +351,7 @@ Secret values are masked while typing and redacted from output buffers.
 | `:LeetCodeLang [lang]` | Set the language used for future problem opens. |
 | `:LeetCodeSearch [query]` | Search problems and open the selected problem. |
 | `:LeetCodeOpen [id\|slug\|title]` | Open one problem directly. |
+| `:LeetCodeRandomTopic [topic]` | Open a random unsolved, unlocked problem from a topic. |
 | `:LeetCodeTest [testcase]` | Run tests for the current LeetCode solution file. |
 | `:LeetCodeTestCase [testcase]` | Open a scratch testcase editor and run its content with `r`. |
 | `:LeetCodeSubmit` | Submit the current LeetCode solution file. |
