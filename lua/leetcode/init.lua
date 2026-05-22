@@ -2,6 +2,7 @@ local cli = require("leetcode.cli")
 local config = require("leetcode.config")
 local diagnostics = require("leetcode.diagnostics")
 local files = require("leetcode.files")
+local input = require("leetcode.input")
 local languages = require("leetcode.languages")
 local output = require("leetcode.output")
 local parser = require("leetcode.parser")
@@ -83,7 +84,7 @@ function M.login()
     { label = "LinkedIn", args = { "user", "-i" } },
   }
 
-  vim.ui.select(choices, {
+  picker.select_items(choices, {
     prompt = "LeetCode login method",
     format_item = function(item)
       return item.label
@@ -94,44 +95,51 @@ function M.login()
     end
 
     if choice.stdin then
-      vim.ui.input({ prompt = "LeetCode username or email: " }, function(login)
+      input.prompt({ prompt = "LeetCode username or email" }, function(login)
         if not login or util.trim(login) == "" then
           util.notify("Login cancelled", vim.log.levels.WARN)
           return
         end
 
-        local session_or_cookie = vim.fn.inputsecret("Paste full cookie or LEETCODE_SESSION value: ")
-        if session_or_cookie == "" then
-          util.notify("Login cancelled", vim.log.levels.WARN)
-          return
-        end
-
-        local csrf = ""
-        if not util.cookie_has_required_fields(session_or_cookie) then
-          csrf = vim.fn.inputsecret("csrftoken value: ")
-          if csrf == "" then
+        input.prompt({ prompt = "Paste full cookie or LEETCODE_SESSION value", secret = true, width = 80 }, function(session_or_cookie)
+          if not session_or_cookie or session_or_cookie == "" then
             util.notify("Login cancelled", vim.log.levels.WARN)
             return
           end
-        end
 
-        local cookie = util.cookie_from_login_input(session_or_cookie, csrf)
-        if not util.cookie_has_required_fields(cookie) then
-          util.notify("Cookie login needs LEETCODE_SESSION and csrftoken values", vim.log.levels.ERROR)
-          return
-        end
+          local function save(csrf)
+            local cookie = util.cookie_from_login_input(session_or_cookie, csrf)
+            if not util.cookie_has_required_fields(cookie) then
+              util.notify("Cookie login needs LEETCODE_SESSION and csrftoken values", vim.log.levels.ERROR)
+              return
+            end
 
-        local path, err = session.save_cookie_user(login, cookie)
-        if err then
-          util.notify(err, vim.log.levels.ERROR)
-          return
-        end
+            local path, err = session.save_cookie_user(login, cookie)
+            if err then
+              util.notify(err, vim.log.levels.ERROR)
+              return
+            end
 
-        show_result("login", {
-          code = 0,
-          stdout = "Saved LeetCode cookie session to " .. path .. "\nRun :LeetCodeSearch or :LeetCodeOpen to verify it against leetcode.com.",
-          stderr = "",
-        })
+            show_result("login", {
+              code = 0,
+              stdout = "Saved LeetCode cookie session to " .. path .. "\nRun :LeetCodeSearch or :LeetCodeOpen to verify it against leetcode.com.",
+              stderr = "",
+            })
+          end
+
+          if util.cookie_has_required_fields(session_or_cookie) then
+            save("")
+            return
+          end
+
+          input.prompt({ prompt = "csrftoken value", secret = true, width = 80 }, function(csrf)
+            if not csrf or csrf == "" then
+              util.notify("Login cancelled", vim.log.levels.WARN)
+              return
+            end
+            save(csrf)
+          end)
+        end)
       end)
       return
     end
@@ -174,7 +182,11 @@ end
 
 function M.open_problem(keyword, known)
   if not keyword or keyword == "" then
-    util.notify("Missing LeetCode problem id, slug, or title", vim.log.levels.ERROR)
+    input.prompt({ prompt = "LeetCode problem id, slug, or title" }, function(value)
+      if value and util.trim(value) ~= "" then
+        M.open_problem(value, known)
+      end
+    end)
     return
   end
 
@@ -203,9 +215,11 @@ end
 function M.search(query)
   query = query or ""
   if query == "" then
-    query = vim.fn.input("LeetCode search: ")
-  end
-  if query == "" then
+    input.prompt({ prompt = "LeetCode search" }, function(value)
+      if value and util.trim(value) ~= "" then
+        M.search(value)
+      end
+    end)
     return
   end
 
@@ -288,7 +302,7 @@ local function register_commands()
   end, { nargs = "*" })
   vim.api.nvim_create_user_command("LeetCodeOpen", function(opts)
     M.open_problem(opts.args)
-  end, { nargs = "+" })
+  end, { nargs = "*" })
   vim.api.nvim_create_user_command("LeetCodeTest", function(opts)
     M.test(opts.args)
   end, { nargs = "*" })

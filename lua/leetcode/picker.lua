@@ -1,6 +1,6 @@
 local M = {}
 
-local function display(problem)
+local function problem_display(problem)
   local state = problem.state or " "
   local locked = problem.locked and "locked" or "open"
   return string.format("%-6s %-60s %-8s %-7s %s", problem.fid or problem.id, problem.name, problem.level or "", state, locked)
@@ -17,9 +17,9 @@ local function load_telescope()
   return ok
 end
 
-local function telescope_select(problems, callback)
+local function telescope_select(items, opts, callback)
   if not load_telescope() then
-    return false, "Telescope is not available"
+    return false
   end
 
   local ok, err = pcall(function()
@@ -30,14 +30,15 @@ local function telescope_select(problems, callback)
     local action_state = require("telescope.actions.state")
 
     pickers.new({}, {
-      prompt_title = "LeetCode Problems",
+      prompt_title = opts.prompt or "LeetCode",
       finder = finders.new_table({
-        results = problems,
-        entry_maker = function(problem)
+        results = items,
+        entry_maker = function(item)
+          local text = opts.format_item and opts.format_item(item) or tostring(item)
           return {
-            value = problem,
-            display = display(problem),
-            ordinal = table.concat({ problem.fid or problem.id, problem.name, problem.level or "", problem.state or "" }, " "),
+            value = item,
+            display = text,
+            ordinal = text,
           }
         end,
       }),
@@ -61,8 +62,9 @@ local function telescope_select(problems, callback)
   return true
 end
 
-function M.select_problem(problems, callback)
-  local ok, err = telescope_select(problems, callback)
+function M.select_items(items, opts, callback)
+  opts = opts or {}
+  local ok, err = telescope_select(items, opts, callback)
   if ok then
     return
   end
@@ -73,11 +75,13 @@ function M.select_problem(problems, callback)
     end)
   end
 
-  vim.ui.select(problems, {
+  vim.ui.select(items, opts, callback)
+end
+
+function M.select_problem(problems, callback)
+  M.select_items(problems, {
     prompt = "LeetCode problems",
-    format_item = function(item)
-      return display(item)
-    end,
+    format_item = problem_display,
   }, callback)
 end
 

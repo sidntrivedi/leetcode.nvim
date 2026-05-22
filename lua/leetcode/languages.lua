@@ -20,7 +20,7 @@ function M.set(lang)
 end
 
 function M.select()
-  vim.ui.select(M.list(), { prompt = "LeetCode language" }, function(lang)
+  require("leetcode.picker").select_items(M.list(), { prompt = "LeetCode language" }, function(lang)
     if not lang then
       return
     end
@@ -34,4 +34,3 @@ function M.select()
 end
 
 return M
-

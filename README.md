@@ -21,8 +21,8 @@ LeetCode transport layer.
   available either from this plugin's local `node_modules`, from a `leetcode`
   executable on `PATH`, or from `cli.path` in setup.
 - Optional: [`telescope.nvim`](https://github.com/nvim-telescope/telescope.nvim)
-  for the `:LeetCodeSearch` picker. The plugin falls back to `vim.ui.select`
-  when Telescope is not installed.
+  for selection pickers. The plugin falls back to `vim.ui.select` when
+  Telescope is not installed.
 
 ## Installation
 
@@ -118,7 +118,8 @@ require("leetcode").setup({
   Without an argument it opens a picker.
 - `:LeetCodeSearch [query]` searches problems and opens the selected problem.
   Telescope is used automatically when available.
-- `:LeetCodeOpen <id|slug|title>` opens one problem directly.
+- `:LeetCodeOpen [id|slug|title]` opens one problem directly. Without an
+  argument it prompts in a floating text box.
 - `:LeetCodeTest [testcase]` runs tests for the current file.
 - `:LeetCodeSubmit` submits the current file.
 - `:LeetCodeHealth` checks workspace, language, CLI path, Node, filename
@@ -128,6 +129,16 @@ require("leetcode").setup({
 file containing an `@lc app=leetcode id=<id> lang=<lang>` header. If that
 metadata is missing, the plugin will explain what needs to be added instead of
 letting the CLI fail with a vague error.
+
+## Input UI
+
+Typed values use a floating text box instead of Neovim's command-line prompt.
+This includes search queries, direct open prompts, login username/email, cookie
+input, and `csrftoken`. Secret values are masked while typing.
+
+Selection prompts, such as login method, language, and search results, use
+Telescope automatically when it is available. Without Telescope they fall back
+to your configured `vim.ui.select` implementation.
 
 ## Cookie Login
 
