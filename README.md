@@ -23,6 +23,9 @@ LeetCode transport layer.
 - Optional: [`telescope.nvim`](https://github.com/nvim-telescope/telescope.nvim)
   for selection pickers. The plugin falls back to `vim.ui.select` when
   Telescope is not installed.
+- Optional: [`plenary.nvim`](https://github.com/nvim-lua/plenary.nvim) for
+  typed floating prompts. The plugin falls back to a native Neovim floating
+  input window when Plenary is not installed.
 
 ## Installation
 
@@ -133,8 +136,10 @@ letting the CLI fail with a vague error.
 ## Input UI
 
 Typed values use a floating text box instead of Neovim's command-line prompt.
-This includes search queries, direct open prompts, login username/email, cookie
-input, and `csrftoken`. Secret values are masked while typing.
+When `plenary.nvim` is available the prompt is backed by `plenary.popup`;
+otherwise the plugin uses a native Neovim floating input window. This includes
+search queries, direct open prompts, login username/email, cookie input, and
+`csrftoken`. Secret values are masked while typing.
 
 Selection prompts, such as login method, language, and search results, use
 Telescope automatically when it is available. Without Telescope they fall back
