@@ -183,6 +183,10 @@ func twoSum(nums []int, target int) []int {
   assert_true(health:match("workspace"), "health workspace row")
   assert_true(health:match("cookie fields"), "health cookie row")
 
+  local leetcode = require("leetcode")
+  assert_eq(leetcode._command_failed({ code = 0, stdout = "[ERROR] Problem not found!\n", stderr = "" }), true, "cli error stdout")
+  assert_eq(leetcode._command_failed({ code = 0, stdout = "ok\n", stderr = "" }), false, "cli success")
+
   output.show("login", "first")
   local first_buf = output._find_buffer("leetcode://login")
   assert_true(first_buf ~= nil, "output buffer created")

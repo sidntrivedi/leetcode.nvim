@@ -19,6 +19,8 @@ local commands_registered = false
 
 local function command_failed(result)
   return result.code ~= 0
+    or (result.stdout or ""):match("%[ERROR%]") ~= nil
+    or (result.stderr or ""):match("%[ERROR%]") ~= nil
 end
 
 local function show_result(title, result, opts)
@@ -301,6 +303,15 @@ function M.random_topic(args)
     vim.list_extend(args, { "-q", query })
   end
   cli.run(args, {}, function(result)
+    if command_failed(result) and query ~= "" then
+      util.notify(
+        "No " .. difficulty .. " problem found for " .. topics.label(topic) .. "; retrying without difficulty",
+        vim.log.levels.WARN
+      )
+      M.random_topic(topic)
+      return
+    end
+
     write_problem_from_show_result("random-topic", result, {
       topic = topic,
       difficulty = difficulty,
@@ -439,5 +450,7 @@ function M.setup(opts)
   register_commands()
   return M
 end
+
+M._command_failed = command_failed
 
 return M
