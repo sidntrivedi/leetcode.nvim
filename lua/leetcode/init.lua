@@ -278,26 +278,32 @@ function M.open_problem(keyword, known)
   end)
 end
 
-function M.random_topic(topic)
-  topic = topics.normalize(topic)
+function M.random_topic(args)
+  local topic, difficulty, query = topics.parse_args(args)
   if topic == "" then
-    picker.select_items(topics.list(), {
+    picker.select_items(topics.picker_items(), {
       prompt = "LeetCode random topic",
       format_item = function(item)
-        return string.format("%-24s %s", item.label, item.value)
+        return string.format("%-24s %-7s %s", item.label, item.difficulty_label, item.value)
       end,
     }, function(choice)
       if choice then
-        M.random_topic(choice.value)
+        M.random_topic(table.concat(vim.tbl_filter(function(part)
+          return part and part ~= ""
+        end, { choice.value, choice.difficulty }), " "))
       end
     end)
     return
   end
 
   local args = { "show", "-t", topic, "-c", "-x", "-l", config.get().lang }
+  if query ~= "" then
+    vim.list_extend(args, { "-q", query })
+  end
   cli.run(args, {}, function(result)
     write_problem_from_show_result("random-topic", result, {
       topic = topic,
+      difficulty = difficulty,
     })
   end)
 end
