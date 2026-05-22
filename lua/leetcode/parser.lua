@@ -64,7 +64,21 @@ function M.parse_list(output)
 end
 
 function M.meta_from_file(path, content)
-  content = content or table.concat(vim.fn.readfile(path), "\n")
+  if content == nil then
+    local ok, lines = pcall(vim.fn.readfile, path)
+    if not ok then
+      return {
+        id = nil,
+        fid = nil,
+        lang = "unknown",
+        source = "unreadable",
+        valid = false,
+        warning = "Cannot read file: " .. tostring(path),
+      }
+    end
+    content = table.concat(lines, "\n")
+  end
+
   local id, lang = content:match("@lc%s+app=leetcode%s+id=([^%s]+)%s+lang=([^%s]+)")
   if id and lang then
     return { id = id, fid = id, lang = lang, source = "metadata", valid = true }

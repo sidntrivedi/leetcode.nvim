@@ -103,6 +103,9 @@ func twoSum(nums []int, target int) []int {
   assert_eq(fallback_meta.valid, true, "fallback valid")
   local invalid_meta = parser.meta_from_file("README.md", "")
   assert_eq(invalid_meta.valid, false, "invalid metadata")
+  local unreadable_meta = parser.meta_from_file(vim.fn.tempname() .. "/NvimTree_1")
+  assert_eq(unreadable_meta.valid, false, "unreadable metadata")
+  assert_eq(unreadable_meta.source, "unreadable", "unreadable metadata source")
 
   local workspace = tmpdir()
   config.setup({ workspace = workspace })

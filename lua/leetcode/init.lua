@@ -38,43 +38,102 @@ local function show_parsed_result(title, result, opts)
   output.show(title, results.format(title, raw, result.code), opts)
 end
 
-local function current_file()
-  local path = vim.api.nvim_buf_get_name(0)
-  if path == "" then
-    util.notify("Current buffer has no file name", vim.log.levels.ERROR)
+local function buffer_file(buf)
+  if not vim.api.nvim_buf_is_valid(buf) then
     return nil
   end
+
+  if vim.bo[buf].buftype ~= "" then
+    return nil
+  end
+
+  local path = vim.api.nvim_buf_get_name(buf)
+  if path == "" or vim.fn.filereadable(path) ~= 1 then
+    return nil
+  end
+
   return path
 end
 
-local function save_current_file()
-  if vim.bo.modified then
-    vim.cmd.write()
+local function save_file(buf)
+  if vim.bo[buf].modified then
+    vim.api.nvim_buf_call(buf, function()
+      vim.cmd.write()
+    end)
   end
 end
 
-local function current_problem_meta(path)
+local function problem_meta(path)
   local ok, meta = pcall(parser.meta_from_file, path)
-  if not ok or not meta or not meta.valid then
-    local detail = ok and meta and meta.warning or tostring(meta)
-    show_result("metadata", {
-      code = 1,
-      stdout = "",
-      stderr = table.concat({
-        "Current file is not a LeetCode solution file.",
-        detail or "Unable to read problem metadata.",
-        "",
-        "Open a problem with :LeetCodeOpen or :LeetCodeSearch, or add a header like:",
-        "@lc app=leetcode id=1 lang=golang",
-      }, "\n"),
-    })
-    return nil
+  if not ok then
+    return nil, tostring(meta)
+  end
+  if not meta or not meta.valid then
+    return nil, meta and meta.warning or "Unable to read problem metadata."
+  end
+  return meta, nil
+end
+
+local function show_metadata_error(detail)
+  show_result("metadata", {
+    code = 1,
+    stdout = "",
+    stderr = table.concat({
+      "Current file is not a LeetCode solution file.",
+      detail or "Unable to read problem metadata.",
+      "",
+      "Focus a LeetCode solution file, keep one visible in another window, or open one with :LeetCodeOpen / :LeetCodeSearch.",
+      "Expected header:",
+      "@lc app=leetcode id=1 lang=golang",
+    }, "\n"),
+  })
+end
+
+local function add_candidate(candidates, seen, buf, win)
+  local path = buffer_file(buf)
+  if not path or seen[path] then
+    return
+  end
+  seen[path] = true
+  table.insert(candidates, { buf = buf, win = win, path = path })
+end
+
+local function current_problem_file()
+  local candidates = {}
+  local seen = {}
+  add_candidate(candidates, seen, vim.api.nvim_get_current_buf(), vim.api.nvim_get_current_win())
+
+  local alternate = vim.fn.bufnr("#")
+  if alternate and alternate > 0 then
+    add_candidate(candidates, seen, alternate, nil)
   end
 
-  if meta.source == "filename" and meta.warning then
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    add_candidate(candidates, seen, vim.api.nvim_win_get_buf(win), win)
+  end
+
+  local last_error
+  for _, candidate in ipairs(candidates) do
+    local meta, err = problem_meta(candidate.path)
+    if meta then
+      candidate.meta = meta
+      return candidate
+    end
+    last_error = err
+  end
+
+  local current_name = vim.api.nvim_buf_get_name(0)
+  if current_name == "" then
+    current_name = vim.bo.filetype ~= "" and vim.bo.filetype or "[No Name]"
+  end
+  show_metadata_error(last_error or ("Focused buffer is not a readable solution file: " .. current_name))
+  return nil
+end
+
+local function warn_filename_fallback(meta)
+  if meta and meta.source == "filename" and meta.warning then
     util.notify(meta.warning, vim.log.levels.WARN)
   end
-  return meta
 end
 
 function M.login()
@@ -245,37 +304,33 @@ function M.search(query)
 end
 
 function M.test(testcase)
-  local path = current_file()
-  if not path then
+  local target = current_problem_file()
+  if not target then
     return
   end
-  if not current_problem_meta(path) then
-    return
-  end
-  save_current_file()
+  warn_filename_fallback(target.meta)
+  save_file(target.buf)
 
-  local args = { "test", path }
+  local args = { "test", target.path }
   if testcase and testcase ~= "" then
     vim.list_extend(args, { "-t", testcase })
   end
-  local win = vim.api.nvim_get_current_win()
+  local win = target.win or vim.api.nvim_get_current_win()
   cli.run(args, {}, function(result)
     show_parsed_result("test", result, { return_to = command_failed(result) and nil or win })
   end)
 end
 
 function M.submit()
-  local path = current_file()
-  if not path then
+  local target = current_problem_file()
+  if not target then
     return
   end
-  if not current_problem_meta(path) then
-    return
-  end
-  save_current_file()
+  warn_filename_fallback(target.meta)
+  save_file(target.buf)
 
-  local win = vim.api.nvim_get_current_win()
-  cli.run({ "submit", path }, {}, function(result)
+  local win = target.win or vim.api.nvim_get_current_win()
+  cli.run({ "submit", target.path }, {}, function(result)
     show_parsed_result("submit", result, { return_to = command_failed(result) and nil or win })
   end)
 end
