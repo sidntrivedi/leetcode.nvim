@@ -279,6 +279,12 @@ Run with an explicit testcase:
 :LeetCodeTest [2,7,11,15]\n9
 ```
 
+Open a scratch testcase editor, edit the input, then press `r` to run it:
+
+```vim
+:LeetCodeTestCase
+```
+
 Submit:
 
 ```vim
@@ -293,7 +299,11 @@ Panel keys:
 
 - `q` closes the panel.
 - `<Esc>` closes the panel.
-- `r` opens the full raw CLI output in the normal output buffer.
+- `r` reruns the failed testcase when one is available.
+- `e` opens the failed testcase in the testcase editor.
+- `y` yanks the failed testcase.
+- `s` submits the current solution when shown.
+- `R` opens the full raw CLI output in the normal output buffer.
 
 The panel shows parsed fields when the CLI output includes them:
 
@@ -334,6 +344,7 @@ Secret values are masked while typing and redacted from output buffers.
 | `:LeetCodeSearch [query]` | Search problems and open the selected problem. |
 | `:LeetCodeOpen [id\|slug\|title]` | Open one problem directly. |
 | `:LeetCodeTest [testcase]` | Run tests for the current LeetCode solution file. |
+| `:LeetCodeTestCase [testcase]` | Open a scratch testcase editor and run its content with `r`. |
 | `:LeetCodeSubmit` | Submit the current LeetCode solution file. |
 
 ## Solution File Detection

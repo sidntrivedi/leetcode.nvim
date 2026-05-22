@@ -1,5 +1,6 @@
 local output = require("leetcode.output")
 local results = require("leetcode.results")
+local testcase = require("leetcode.testcase")
 local util = require("leetcode.util")
 
 local M = {}
@@ -59,7 +60,8 @@ local function section(lines, title, value)
   end
 end
 
-local function summary_lines(parsed)
+local function summary_lines(parsed, opts)
+  opts = opts or {}
   local title = parsed.kind == "submit" and "LeetCode Submit" or "LeetCode Test"
   local status = parsed.verdict or (parsed.ok and "Finished" or "Failed")
   local lines = {
@@ -79,7 +81,12 @@ local function summary_lines(parsed)
   section(lines, "Error", parsed.error)
 
   table.insert(lines, "")
-  table.insert(lines, "Press r for raw output, q to close.")
+  local keys = { "q close", "R raw" }
+  if opts.on_rerun then table.insert(keys, "r rerun") end
+  if opts.on_edit_testcase then table.insert(keys, "e edit testcase") end
+  if parsed.input then table.insert(keys, "y yank testcase") end
+  if opts.on_submit then table.insert(keys, "s submit") end
+  table.insert(lines, "Keys: " .. table.concat(keys, " | "))
   return lines
 end
 
@@ -116,7 +123,10 @@ function M.show(kind, raw, code, opts)
   opts = opts or {}
   raw = util.strip_ansi(util.redact(raw or ""))
   local parsed = results.parse(kind, raw, code)
-  local lines = summary_lines(parsed)
+  if parsed.input then
+    testcase.set_last(parsed.input)
+  end
+  local lines = summary_lines(parsed, opts)
   local title = kind == "submit" and "submit" or "test"
 
   close_existing()
@@ -139,9 +149,34 @@ function M.show(kind, raw, code, opts)
       vim.api.nvim_set_current_win(opts.return_to)
     end
   end, map_opts)
-  vim.keymap.set("n", "r", function()
+  vim.keymap.set("n", "R", function()
     output.show(title, results.format(kind, raw, code), opts)
   end, map_opts)
+  if opts.on_rerun then
+    vim.keymap.set("n", "r", function()
+      close_existing()
+      opts.on_rerun(parsed.input)
+    end, map_opts)
+  end
+  if opts.on_edit_testcase then
+    vim.keymap.set("n", "e", function()
+      close_existing()
+      opts.on_edit_testcase(parsed.input)
+    end, map_opts)
+  end
+  if parsed.input then
+    vim.keymap.set("n", "y", function()
+      vim.fn.setreg('"', parsed.input)
+      pcall(vim.fn.setreg, "+", parsed.input)
+      util.notify("Yanked testcase")
+    end, map_opts)
+  end
+  if opts.on_submit then
+    vim.keymap.set("n", "s", function()
+      close_existing()
+      opts.on_submit()
+    end, map_opts)
+  end
 end
 
 M._summary_lines = summary_lines

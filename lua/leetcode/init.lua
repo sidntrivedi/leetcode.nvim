@@ -10,6 +10,7 @@ local picker = require("leetcode.picker")
 local result_panel = require("leetcode.result_panel")
 local results = require("leetcode.results")
 local session = require("leetcode.session")
+local testcase = require("leetcode.testcase")
 local util = require("leetcode.util")
 
 local M = {}
@@ -318,8 +319,26 @@ function M.test(testcase)
   end
   local win = target.win or vim.api.nvim_get_current_win()
   cli.run(args, {}, function(result)
-    show_parsed_result("test", result, { return_to = command_failed(result) and nil or win })
+    show_parsed_result("test", result, {
+      return_to = command_failed(result) and nil or win,
+      on_rerun = function(failed_testcase)
+        M.test(failed_testcase or testcase)
+      end,
+      on_edit_testcase = function(failed_testcase)
+        M.testcase(failed_testcase or testcase)
+      end,
+      on_submit = M.submit,
+    })
   end)
+end
+
+function M.testcase(initial)
+  testcase.open({
+    initial = initial,
+    on_run = function(value)
+      M.test(value)
+    end,
+  })
 end
 
 function M.submit()
@@ -332,7 +351,15 @@ function M.submit()
 
   local win = target.win or vim.api.nvim_get_current_win()
   cli.run({ "submit", target.path }, {}, function(result)
-    show_parsed_result("submit", result, { return_to = command_failed(result) and nil or win })
+    show_parsed_result("submit", result, {
+      return_to = command_failed(result) and nil or win,
+      on_rerun = function(failed_testcase)
+        M.test(failed_testcase)
+      end,
+      on_edit_testcase = function(failed_testcase)
+        M.testcase(failed_testcase)
+      end,
+    })
   end)
 end
 
@@ -361,6 +388,9 @@ local function register_commands()
   end, { nargs = "*" })
   vim.api.nvim_create_user_command("LeetCodeTest", function(opts)
     M.test(opts.args)
+  end, { nargs = "*" })
+  vim.api.nvim_create_user_command("LeetCodeTestCase", function(opts)
+    M.testcase(opts.args)
   end, { nargs = "*" })
   vim.api.nvim_create_user_command("LeetCodeSubmit", M.submit, {})
   vim.api.nvim_create_user_command("LeetCodeHealth", M.health, {})
